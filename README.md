@@ -8,6 +8,10 @@
 
 > A local, Docker-powered simulator that mirrors the [Contabo API](https://api.contabo.com/) — spin up real SSH-accessible containers instead of actual VPS instances. Perfect for development and testing when Contabo doesn't provide a sandbox environment.
 
+<p align="center">
+  <img src="docs/dashboard-demo.webp" alt="Dashboard Demo" width="800" />
+</p>
+
 ## Why?
 
 Contabo has **no test/sandbox API**. If you're building automation, orchestration, or infrastructure tools that target Contabo, you either test against production (risky + costly) or mock everything (fragile + unrealistic).
