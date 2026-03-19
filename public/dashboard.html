@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contabo Simulator — Test Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0e1a; --bg-secondary: #111827; --bg-card: #1a2035;
+      --bg-card-hover: #1f2847; --border: #2a3454; --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8; --text-muted: #64748b; --accent: #3b82f6;
+      --accent-glow: rgba(59,130,246,0.15); --green: #22c55e;
+      --green-glow: rgba(34,197,94,0.15); --red: #ef4444;
+      --red-glow: rgba(239,68,68,0.15); --yellow: #eab308;
+      --yellow-glow: rgba(234,179,8,0.15); --purple: #a855f7;
+      --purple-glow: rgba(168,85,247,0.15); --orange: #f97316;
+      --radius: 12px; --radius-sm: 8px; --transition: all 0.2s ease;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',-apple-system,sans-serif; background:var(--bg-primary); color:var(--text-primary); min-height:100vh; }
+
+    .header { background:linear-gradient(135deg,var(--bg-secondary) 0%,#0f172a 100%); border-bottom:1px solid var(--border); padding:20px 32px; display:flex; align-items:center; justify-content:space-between; }
+    .header-left { display:flex; align-items:center; gap:16px; }
+    .logo { width:40px; height:40px; background:linear-gradient(135deg,var(--accent),var(--purple)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; color:white; }
+    .header-title { font-size:20px; font-weight:600; }
+    .header-subtitle { font-size:13px; color:var(--text-muted); margin-top:2px; }
+    .header-actions { display:flex; gap:10px; }
+    .header-badge { background:var(--accent-glow); border:1px solid rgba(59,130,246,0.3); color:var(--accent); padding:6px 14px; border-radius:20px; font-size:12px; font-weight:500; }
+
+    /* Tabs */
+    .tabs { display:flex; gap:0; border-bottom:1px solid var(--border); padding:0 32px; background:var(--bg-secondary); }
+    .tab { padding:14px 24px; font-size:14px; font-weight:500; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; transition:var(--transition); }
+    .tab:hover { color:var(--text-primary); }
+    .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+
+    .container { padding:24px 32px; max-width:1400px; margin:0 auto; }
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-bottom:32px; }
+    .stat-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px 24px; transition:var(--transition); }
+    .stat-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+    .stat-label { font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
+    .stat-value { font-size:32px; font-weight:700; }
+    .stat-value.green { color:var(--green); } .stat-value.red { color:var(--red); } .stat-value.accent { color:var(--accent); }
+
+    .section { margin-bottom:32px; }
+    .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+    .section-title { font-size:18px; font-weight:600; }
+
+    .btn { padding:10px 20px; border:none; border-radius:var(--radius-sm); font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; transition:var(--transition); display:inline-flex; align-items:center; gap:8px; }
+    .btn-primary { background:linear-gradient(135deg,var(--accent),#2563eb); color:white; }
+    .btn-primary:hover { transform:translateY(-1px); box-shadow:0 4px 16px var(--accent-glow); }
+    .btn-success { background:var(--green); color:white; }
+    .btn-danger { background:var(--red); color:white; }
+    .btn-warning { background:var(--yellow); color:#1a1a1a; }
+    .btn-sm { padding:6px 12px; font-size:12px; }
+    .btn-ghost { background:transparent; border:1px solid var(--border); color:var(--text-secondary); }
+    .btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+    .table-wrapper { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; padding:14px 16px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); background:var(--bg-secondary); border-bottom:1px solid var(--border); }
+    td { padding:14px 16px; font-size:13px; border-bottom:1px solid rgba(42,52,84,0.5); vertical-align:middle; }
+    tr:hover td { background:var(--bg-card-hover); } tr:last-child td { border-bottom:none; }
+
+    .status-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:500; }
+    .status-running { background:var(--green-glow); color:var(--green); border:1px solid rgba(34,197,94,0.3); }
+    .status-stopped { background:var(--red-glow); color:var(--red); border:1px solid rgba(239,68,68,0.3); }
+    .status-provisioning { background:var(--yellow-glow); color:var(--yellow); border:1px solid rgba(234,179,8,0.3); }
+    .status-dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .status-running .status-dot { animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+
+    .mono { font-family:'SF Mono','Fira Code',monospace; font-size:12px; }
+    .tag { display:inline-block; background:var(--purple-glow); color:var(--purple); border:1px solid rgba(168,85,247,0.3); padding:2px 8px; border-radius:4px; font-size:11px; }
+    .ssh-cmd { background:#0d1117; border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-family:'SF Mono',monospace; font-size:11px; color:var(--green); cursor:pointer; transition:var(--transition); }
+    .ssh-cmd:hover { border-color:var(--green); }
+    .actions-cell { display:flex; gap:6px; flex-wrap:wrap; }
+
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:1000; align-items:center; justify-content:center; }
+    .modal-overlay.active { display:flex; }
+    .modal { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:32px; width:520px; max-width:90vw; max-height:85vh; overflow-y:auto; }
+    .modal-title { font-size:20px; font-weight:600; margin-bottom:24px; }
+    .form-group { margin-bottom:18px; }
+    .form-label { display:block; font-size:12px; font-weight:500; color:var(--text-secondary); margin-bottom:6px; }
+    .form-input,.form-select,.form-textarea { width:100%; padding:10px 14px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-primary); font-family:inherit; font-size:14px; transition:var(--transition); }
+    .form-textarea { font-family:'SF Mono',monospace; font-size:13px; resize:vertical; min-height:120px; }
+    .form-input:focus,.form-select:focus,.form-textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-glow); }
+    .form-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+
+    .toast-container { position:fixed; top:20px; right:20px; z-index:2000; display:flex; flex-direction:column; gap:10px; }
+    .toast { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px 20px; font-size:13px; box-shadow:0 8px 32px rgba(0,0,0,0.3); animation:slideIn 0.3s ease; display:flex; align-items:center; gap:10px; min-width:300px; }
+    .toast.success { border-left:3px solid var(--green); } .toast.error { border-left:3px solid var(--red); } .toast.info { border-left:3px solid var(--accent); }
+    @keyframes slideIn { from{transform:translateX(100%);opacity:0;} to{transform:translateX(0);opacity:1;} }
+
+    .empty-state { text-align:center; padding:60px 20px; color:var(--text-muted); }
+    .empty-icon { font-size:48px; margin-bottom:16px; } .empty-text { font-size:15px; margin-bottom:24px; }
+
+    .log-panel { background:#0d1117; border:1px solid var(--border); border-radius:var(--radius); padding:16px; max-height:300px; overflow-y:auto; font-family:'SF Mono',monospace; font-size:12px; line-height:1.6; color:var(--text-muted); }
+    .log-entry { margin-bottom:2px; }
+    .log-entry .time { color:var(--text-muted); } .log-entry .method { color:var(--yellow); font-weight:500; }
+    .log-entry .status-ok { color:var(--green); } .log-entry .status-err { color:var(--red); }
+
+    /* ─── API Explorer ─── */
+    .api-layout { display:grid; grid-template-columns:280px 1fr; gap:20px; }
+    .api-sidebar { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    .api-group-title { padding:12px 16px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); background:var(--bg-secondary); border-bottom:1px solid var(--border); }
+    .api-item { padding:10px 16px; cursor:pointer; transition:var(--transition); border-bottom:1px solid rgba(42,52,84,0.3); display:flex; align-items:center; gap:10px; }
+    .api-item:hover { background:var(--bg-card-hover); }
+    .api-item.active { background:var(--accent-glow); border-left:3px solid var(--accent); }
+    .api-method { font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; min-width:44px; text-align:center; }
+    .api-method.get { background:var(--green-glow); color:var(--green); }
+    .api-method.post { background:var(--accent-glow); color:var(--accent); }
+    .api-method.patch { background:var(--yellow-glow); color:var(--yellow); }
+    .api-method.delete { background:var(--red-glow); color:var(--red); }
+    .api-item-path { font-size:12px; color:var(--text-secondary); }
+
+    .api-main { display:flex; flex-direction:column; gap:16px; }
+    .api-request-panel { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:20px; }
+    .api-url-bar { display:flex; gap:10px; align-items:center; margin-bottom:16px; }
+    .api-url-method { font-size:13px; font-weight:700; padding:10px 14px; border-radius:var(--radius-sm); min-width:70px; text-align:center; border:none; }
+    .api-url-input { flex:1; padding:10px 14px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-primary); font-family:'SF Mono',monospace; font-size:13px; }
+    .api-url-input:focus { outline:none; border-color:var(--accent); }
+
+    .api-response-panel { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); flex:1; display:flex; flex-direction:column; }
+    .api-response-header { display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid var(--border); }
+    .api-response-status { font-size:13px; font-weight:600; }
+    .api-response-time { font-size:12px; color:var(--text-muted); }
+    .api-response-body { font-family:'SF Mono',monospace; font-size:12px; line-height:1.6; padding:16px 20px; overflow:auto; max-height:500px; white-space:pre-wrap; color:var(--text-secondary); background:#0d1117; border-radius:0 0 var(--radius) var(--radius); }
+
+    .api-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); }
+    .api-tab { padding:8px 16px; font-size:12px; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; }
+    .api-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+    .api-body-section { display:none; }
+    .api-body-section.active { display:block; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">CS</div>
+      <div>
+        <div class="header-title">Contabo Simulator</div>
+        <div class="header-subtitle">Docker-backed VPS Emulator — Test Dashboard</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="header-badge" id="serverStatus">● Connected</span>
+      <button class="btn btn-ghost btn-sm" onclick="refreshDashboard()">↻ Refresh</button>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('instances')">💻 Instances</div>
+    <div class="tab" onclick="switchTab('explorer')">🔌 API Explorer</div>
+  </div>
+
+  <!-- Tab 1: Instances -->
+  <div class="tab-content active" id="tab-instances">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Total Instances</div><div class="stat-value accent" id="statTotal">0</div></div>
+        <div class="stat-card"><div class="stat-label">Running</div><div class="stat-value green" id="statRunning">0</div></div>
+        <div class="stat-card"><div class="stat-label">Stopped</div><div class="stat-value red" id="statStopped">0</div></div>
+        <div class="stat-card"><div class="stat-label">Available Images</div><div class="stat-value" id="statImages" style="color:var(--purple);">0</div></div>
+      </div>
+      <div class="section">
+        <div class="section-header">
+          <h2 class="section-title">💻 Compute Instances</h2>
+          <button class="btn btn-primary" onclick="openCreateModal()">+ Create Instance</button>
+        </div>
+        <div class="table-wrapper">
+          <table><thead><tr><th>ID</th><th>Display Name</th><th>OS / Image</th><th>Product</th><th>Status</th><th>SSH Access</th><th>Container</th><th>Created</th><th>Actions</th></tr></thead>
+          <tbody id="instancesTable"><tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🖥️</div><div class="empty-text">No instances yet. Create your first VPS to get started.</div></div></td></tr></tbody></table>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-header"><h2 class="section-title">📋 Activity Log</h2><button class="btn btn-ghost btn-sm" onclick="clearLog()">Clear</button></div>
+        <div class="log-panel" id="logPanel"><div class="log-entry"><span class="time">[Ready]</span> Dashboard initialized. Waiting for activity...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: API Explorer -->
+  <div class="tab-content" id="tab-explorer">
+    <div class="container">
+      <div class="api-layout">
+        <div class="api-sidebar" id="apiSidebar"></div>
+        <div class="api-main">
+          <div class="api-request-panel">
+            <div class="api-url-bar">
+              <span class="api-url-method" id="apiMethod" style="background:var(--green-glow);color:var(--green);">GET</span>
+              <input class="api-url-input" id="apiUrl" value="/v1/compute/instances">
+              <button class="btn btn-primary" id="apiSendBtn" onclick="sendApiRequest()">▶ Send</button>
+            </div>
+            <div class="api-tabs">
+              <div class="api-tab active" onclick="switchApiTab('headers')">Headers</div>
+              <div class="api-tab" onclick="switchApiTab('body')">Body</div>
+            </div>
+            <div class="api-body-section active" id="apiSec-headers" style="padding-top:12px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <input class="form-input" value="Authorization" disabled style="font-size:12px;">
+                <input class="form-input" id="apiHeaderAuth" value="Bearer sim-token" style="font-size:12px;">
+                <input class="form-input" value="Content-Type" disabled style="font-size:12px;">
+                <input class="form-input" value="application/json" disabled style="font-size:12px;">
+              </div>
+            </div>
+            <div class="api-body-section" id="apiSec-body" style="padding-top:12px;">
+              <textarea class="form-textarea" id="apiBody" placeholder='{"imageId":"...","productId":"V45"}'></textarea>
+            </div>
+          </div>
+          <div class="api-response-panel">
+            <div class="api-response-header">
+              <span class="api-response-status" id="apiResStatus">Response</span>
+              <span class="api-response-time" id="apiResTime"></span>
+            </div>
+            <pre class="api-response-body" id="apiResBody">Click "Send" or select an endpoint from the sidebar to make a request.</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Instance Modal -->
+  <div class="modal-overlay" id="createModal"><div class="modal">
+    <h2 class="modal-title">Create New Instance</h2>
+    <form id="createForm" onsubmit="handleCreate(event)">
+      <div class="form-group"><label class="form-label">Display Name</label><input class="form-input" type="text" id="formDisplayName" value="My VPS" required></div>
+      <div class="form-group"><label class="form-label">OS Image</label><select class="form-select" id="formImageId"></select></div>
+      <div class="form-group"><label class="form-label">Product (Size)</label><select class="form-select" id="formProductId">
+        <option value="V45">VPS S — 4 CPU, 8 GB RAM, 200 GB</option><option value="V92">VPS M — 6 CPU, 16 GB RAM, 400 GB</option>
+        <option value="V93">VPS L — 8 CPU, 32 GB RAM, 800 GB</option><option value="V94">VPS XL — 10 CPU, 64 GB RAM, 1.6 TB</option>
+      </select></div>
+      <div class="form-group"><label class="form-label">Region</label><select class="form-select" id="formRegion"><option value="EU">European Union</option><option value="US">United States</option></select></div>
+      <div class="form-group"><label class="form-label">Default User</label><select class="form-select" id="formDefaultUser"><option value="root">root</option><option value="admin">admin</option></select></div>
+      <div class="form-group"><label class="form-label">SSH Keys <span style="color:var(--text-muted);font-weight:400">— secret IDs, comma-separated</span></label><input class="form-input" type="text" id="formSshKeys" placeholder="e.g. 1, 2"></div>
+      <div class="form-group"><label class="form-label">User Data (Cloud-Init Script) <span style="color:var(--text-muted);font-weight:400">— optional</span></label><textarea class="form-input" id="formUserData" rows="4" placeholder="#!/bin/bash&#10;echo 'Hello from cloud-init'" style="font-family:monospace;font-size:12px;resize:vertical;"></textarea></div>
+      <div class="form-actions"><button type="button" class="btn btn-ghost" onclick="closeCreateModal()">Cancel</button><button type="submit" class="btn btn-primary" id="createBtn">Create Instance</button></div>
+    </form>
+  </div></div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    const API_BASE = '';
+    let dashboardData = { stats:{}, instances:[], secrets:[], availableImages:[] };
+    let currentApiMethod = 'GET';
+
+    // ─── API Explorer Endpoints ───
+    const API_ENDPOINTS = [
+      { group:'Authentication', items:[
+        { method:'POST', path:'/auth/auth/token', body:'client_id=test&client_secret=test&grant_type=client_credentials', contentType:'application/x-www-form-urlencoded', desc:'Get Auth Token' },
+      ]},
+      { group:'Compute Instances', items:[
+        { method:'GET', path:'/v1/compute/instances', desc:'List Instances' },
+        { method:'POST', path:'/v1/compute/instances', body:JSON.stringify({imageId:"afecbb85-e2fc-46f0-9684-b46b1faf00bb",productId:"V45",region:"EU",displayName:"API Test VPS",defaultUser:"root",sshKeys:[1],userData:"#!/bin/bash\necho 'Hello from cloud-init' > /tmp/cloud-init-test.txt"},null,2), desc:'Create Instance' },
+        { method:'GET', path:'/v1/compute/instances/{instanceId}', desc:'Get Instance', placeholder:'instanceId' },
+        { method:'PATCH', path:'/v1/compute/instances/{instanceId}', body:JSON.stringify({displayName:"Renamed VPS"},null,2), desc:'Update Instance', placeholder:'instanceId' },
+        { method:'DELETE', path:'/v1/compute/instances/{instanceId}', desc:'Cancel Instance', placeholder:'instanceId' },
+      ]},
+      { group:'Instance Actions', items:[
+        { method:'POST', path:'/v1/compute/instances/{instanceId}/actions/start', desc:'Start Instance', placeholder:'instanceId' },
+        { method:'POST', path:'/v1/compute/instances/{instanceId}/actions/stop', desc:'Stop Instance', placeholder:'instanceId' },
+        { method:'POST', path:'/v1/compute/instances/{instanceId}/actions/restart', desc:'Restart Instance', placeholder:'instanceId' },
+        { method:'POST', path:'/v1/compute/instances/{instanceId}/actions/shutdown', desc:'Shutdown Instance', placeholder:'instanceId' },
+      ]},
+      { group:'Images', items:[
+        { method:'GET', path:'/v1/compute/images', desc:'List Images' },
+      ]},
+      { group:'Secrets', items:[
+        { method:'GET', path:'/v1/secrets', desc:'List Secrets' },
+        { method:'POST', path:'/v1/secrets', body:JSON.stringify({name:"my-password",type:"password",value:"SuperSecret123"},null,2), desc:'Create Secret' },
+      ]},
+    ];
+
+    function renderApiSidebar() {
+      const sidebar = document.getElementById('apiSidebar');
+      sidebar.innerHTML = API_ENDPOINTS.map(group => `
+        <div class="api-group-title">${group.group}</div>
+        ${group.items.map((item, idx) => `
+          <div class="api-item" onclick="selectEndpoint('${group.group}',${idx})" data-group="${group.group}" data-idx="${idx}">
+            <span class="api-method ${item.method.toLowerCase()}">${item.method}</span>
+            <span class="api-item-path">${item.desc}</span>
+          </div>
+        `).join('')}
+      `).join('');
+    }
+
+    function selectEndpoint(groupName, idx) {
+      const group = API_ENDPOINTS.find(g => g.group === groupName);
+      const ep = group.items[idx];
+
+      // Highlight active
+      document.querySelectorAll('.api-item').forEach(el => el.classList.remove('active'));
+      document.querySelector(`.api-item[data-group="${groupName}"][data-idx="${idx}"]`).classList.add('active');
+
+      // Resolve path placeholders
+      let path = ep.path;
+      if (ep.placeholder) {
+        const val = prompt(`Enter ${ep.placeholder}:`, dashboardData.instances[0]?.instanceId || '100');
+        if (val === null) return;
+        path = path.replace(`{${ep.placeholder}}`, val);
+      }
+
+      currentApiMethod = ep.method;
+      const methodEl = document.getElementById('apiMethod');
+      methodEl.textContent = ep.method;
+      const colors = { GET:'var(--green)', POST:'var(--accent)', PATCH:'var(--yellow)', DELETE:'var(--red)' };
+      const glows = { GET:'var(--green-glow)', POST:'var(--accent-glow)', PATCH:'var(--yellow-glow)', DELETE:'var(--red-glow)' };
+      methodEl.style.color = colors[ep.method];
+      methodEl.style.background = glows[ep.method];
+
+      document.getElementById('apiUrl').value = path;
+      document.getElementById('apiBody').value = ep.body || '';
+
+      // Show body tab for POST/PATCH
+      if (ep.method === 'POST' || ep.method === 'PATCH') {
+        switchApiTab('body');
+      } else {
+        switchApiTab('headers');
+      }
+    }
+
+    async function sendApiRequest() {
+      const url = document.getElementById('apiUrl').value;
+      const body = document.getElementById('apiBody').value;
+      const auth = document.getElementById('apiHeaderAuth').value;
+      const btn = document.getElementById('apiSendBtn');
+      btn.disabled = true; btn.textContent = '⏳ Sending...';
+
+      const resBody = document.getElementById('apiResBody');
+      const resStatus = document.getElementById('apiResStatus');
+      const resTime = document.getElementById('apiResTime');
+
+      const start = performance.now();
+      try {
+        const opts = { method: currentApiMethod, headers: { 'Authorization': auth } };
+        // Detect if auth endpoint (form-urlencoded)
+        const ep = API_ENDPOINTS.flatMap(g=>g.items).find(i => url.includes(i.path.split('{')[0]) && i.contentType);
+        if (body && (currentApiMethod === 'POST' || currentApiMethod === 'PATCH')) {
+          if (ep && ep.contentType === 'application/x-www-form-urlencoded') {
+            opts.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+            opts.body = body;
+          } else {
+            opts.headers['Content-Type'] = 'application/json';
+            opts.headers['x-request-id'] = crypto.randomUUID();
+            opts.body = body;
+          }
+        }
+
+        const res = await fetch(API_BASE + url, opts);
+        const elapsed = Math.round(performance.now() - start);
+        resTime.textContent = `${elapsed}ms`;
+
+        const statusColor = res.ok ? 'var(--green)' : 'var(--red)';
+        resStatus.innerHTML = `<span style="color:${statusColor}">${res.status} ${res.statusText}</span>`;
+
+        if (res.status === 204) {
+          resBody.textContent = '(No Content)';
+        } else {
+          const data = await res.json();
+          resBody.textContent = JSON.stringify(data, null, 2);
+        }
+        addLog(`${currentApiMethod} ${url} → ${res.status} (${elapsed}ms)`, res.ok ? 'success' : 'error');
+      } catch (err) {
+        resStatus.innerHTML = `<span style="color:var(--red)">Error</span>`;
+        resBody.textContent = err.message;
+        addLog(`${currentApiMethod} ${url} → ERROR: ${err.message}`, 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = '▶ Send';
+      }
+    }
+
+    // ─── Tab Switching ───
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.tab-content#tab-${name}`).classList.add('active');
+      event.target.classList.add('active');
+      if (name === 'instances') refreshDashboard();
+    }
+
+    function switchApiTab(name) {
+      document.querySelectorAll('.api-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.api-body-section').forEach(t => t.classList.remove('active'));
+      document.getElementById(`apiSec-${name}`).classList.add('active');
+      document.querySelectorAll('.api-tab').forEach(t => { if (t.textContent.toLowerCase().includes(name)) t.classList.add('active'); });
+    }
+
+    // ─── Dashboard ───
+    async function refreshDashboard() {
+      try {
+        const res = await fetch(`${API_BASE}/api/dashboard/stats`);
+        dashboardData = await res.json();
+        renderStats(); renderInstances(); renderImageOptions();
+        document.getElementById('serverStatus').innerHTML = '● Connected';
+        document.getElementById('serverStatus').style.color = 'var(--green)';
+      } catch (err) {
+        document.getElementById('serverStatus').innerHTML = '● Disconnected';
+        document.getElementById('serverStatus').style.color = 'var(--red)';
+      }
+    }
+
+    function renderStats() {
+      const s = dashboardData.stats;
+      document.getElementById('statTotal').textContent = s.total||0;
+      document.getElementById('statRunning').textContent = s.running||0;
+      document.getElementById('statStopped').textContent = s.stopped||0;
+      document.getElementById('statImages').textContent = dashboardData.availableImages.length;
+    }
+
+    function renderInstances() {
+      const tbody = document.getElementById('instancesTable');
+      const inst = dashboardData.instances;
+      if (!inst.length) { tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🖥️</div><div class="empty-text">No instances yet.</div></div></td></tr>'; return; }
+      tbody.innerHTML = inst.map(i => {
+        const sc = i.status==='running'?'status-running':i.status==='stopped'?'status-stopped':'status-provisioning';
+        const sshPass = i.status==='running'&&i.sshPort? `ssh root@127.0.0.1 -p ${i.sshPort}`:'';
+        const img = dashboardData.availableImages.find(x=>x.imageId===i.imageId);
+        // Find SSH key secret names for display
+        const keyNames = (i.sshKeys||[]).map(id => { const s = dashboardData.secrets.find(s=>s.secretId===id); return s ? s.name : `key#${id}`; });
+        const sshKey = i.status==='running'&&i.sshPort&&i.sshKeys&&i.sshKeys.length>0 ? `ssh -i ~/.ssh/${keyNames[0]||'key'} root@127.0.0.1 -p ${i.sshPort}`:'';
+
+        let sshCell = '<span style="color:var(--text-muted)">—</span>';
+        if (sshPass) {
+          sshCell = '';
+          if (sshKey) {
+            sshCell += `<div class="ssh-cmd" onclick="copyToClipboard('${sshKey}')" title="Click to copy">🔑 ${sshKey}</div>`;
+            sshCell += `<div style="color:var(--text-muted);font-size:10px;margin-top:2px;margin-bottom:6px">keys: ${keyNames.join(', ')}</div>`;
+          }
+          sshCell += `<div class="ssh-cmd" onclick="copyToClipboard('${sshPass}')" title="Click to copy">🔒 ${sshPass}</div>`;
+          sshCell += `<div style="color:var(--text-muted);font-size:10px;margin-top:2px">pass: ${i.rootPassword}</div>`;
+        }
+
+        return `<tr>
+          <td><span class="mono">${i.instanceId}</span></td>
+          <td><strong>${i.displayName}</strong><br><span class="mono" style="color:var(--text-muted)">${i.name}</span></td>
+          <td><span class="tag">${img?img.name:''}</span></td>
+          <td>${i.productName}<br><span style="color:var(--text-muted);font-size:11px">${i.cpuCores} CPU, ${Math.round(i.ramMb/1024)} GB</span></td>
+          <td><span class="status-badge ${sc}"><span class="status-dot"></span> ${i.status}</span></td>
+          <td>${sshCell}</td>
+          <td><span class="mono" style="color:var(--text-muted)">${i.containerId}</span></td>
+          <td><span style="font-size:12px;color:var(--text-muted)">${new Date(i.createdDate).toLocaleString()}</span></td>
+          <td><div class="actions-cell">
+            ${i.status==='running'?`<button class="btn btn-warning btn-sm" onclick="instanceAction(${i.instanceId},'stop')">⏹ Stop</button><button class="btn btn-ghost btn-sm" onclick="instanceAction(${i.instanceId},'restart')">↻</button>`:`<button class="btn btn-success btn-sm" onclick="instanceAction(${i.instanceId},'start')">▶ Start</button>`}
+            <button class="btn btn-danger btn-sm" onclick="deleteInstance(${i.instanceId})">✕</button>
+          </div></td></tr>`;
+      }).join('');
+    }
+
+    function renderImageOptions() {
+      document.getElementById('formImageId').innerHTML = dashboardData.availableImages.map(i=>`<option value="${i.imageId}">${i.name}</option>`).join('');
+    }
+
+    async function instanceAction(id, action) {
+      addLog(`POST /v1/compute/instances/${id}/actions/${action}`, 'info');
+      const r = await fetch(`${API_BASE}/v1/compute/instances/${id}/actions/${action}`, { method:'POST', headers:{'Authorization':'Bearer sim-token','Content-Type':'application/json'}});
+      const d = await r.json();
+      showToast(r.ok?`${action} successful`:`Failed: ${d.error||d.message}`, r.ok?'success':'error');
+      setTimeout(refreshDashboard, 1000);
+    }
+
+    async function deleteInstance(id) {
+      if (!confirm(`Delete instance ${id}?`)) return;
+      const r = await fetch(`${API_BASE}/v1/compute/instances/${id}`, { method:'DELETE', headers:{'Authorization':'Bearer sim-token'}});
+      showToast(r.ok?`Instance ${id} deleted`:'Delete failed', r.ok?'success':'error');
+      setTimeout(refreshDashboard, 500);
+    }
+
+    function openCreateModal() { document.getElementById('createModal').classList.add('active'); }
+    function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
+
+    async function handleCreate(e) {
+      e.preventDefault();
+      const btn = document.getElementById('createBtn'); btn.disabled=true; btn.textContent='Creating...';
+      const body = { imageId:document.getElementById('formImageId').value, productId:document.getElementById('formProductId').value, region:document.getElementById('formRegion').value, displayName:document.getElementById('formDisplayName').value, defaultUser:document.getElementById('formDefaultUser').value };
+      const sshKeysStr = document.getElementById('formSshKeys').value.trim();
+      if (sshKeysStr) body.sshKeys = sshKeysStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+      const userData = document.getElementById('formUserData').value.trim();
+      if (userData) body.userData = userData;
+      try {
+        const r = await fetch(`${API_BASE}/v1/compute/instances`, { method:'POST', headers:{'Authorization':'Bearer sim-token','Content-Type':'application/json','x-request-id':crypto.randomUUID()}, body:JSON.stringify(body)});
+        const d = await r.json();
+        if (r.ok) { showToast(`Created! SSH port: ${d.data[0].sshPort}`,'success'); closeCreateModal(); }
+        else showToast(`Failed: ${d.error||d.message}`,'error');
+        refreshDashboard();
+      } catch(e) { showToast(e.message,'error'); }
+      finally { btn.disabled=false; btn.textContent='Create Instance'; }
+    }
+
+    function addLog(msg, type) {
+      const p = document.getElementById('logPanel');
+      const c = type==='success'?'status-ok':type==='error'?'status-err':'method';
+      p.innerHTML += `<div class="log-entry"><span class="time">[${new Date().toLocaleTimeString()}]</span> <span class="${c}">${msg}</span></div>`;
+      p.scrollTop = p.scrollHeight;
+    }
+    function clearLog() { document.getElementById('logPanel').innerHTML = '<div class="log-entry"><span class="time">[Cleared]</span></div>'; }
+    function showToast(msg, type='info') {
+      const t = document.createElement('div'); t.className=`toast ${type}`;
+      t.innerHTML = `<span>${type==='success'?'✓':type==='error'?'✕':'ℹ'}</span> ${msg}`;
+      document.getElementById('toastContainer').appendChild(t);
+      setTimeout(()=>t.remove(), 4000);
+    }
+    function copyToClipboard(t) { navigator.clipboard.writeText(t).then(()=>showToast('Copied!','success')); }
+
+    // Init
+    renderApiSidebar();
+    refreshDashboard();
+    setInterval(refreshDashboard, 5000);
+  </script>
+</body>
+</html>

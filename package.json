@@ -1,0 +1,43 @@
+{
+  "name": "contabo-simulator",
+  "version": "1.0.0",
+  "description": "Local Contabo API simulator — creates real SSH-accessible Docker containers instead of VPS instances. Drop-in replacement for development and testing.",
+  "main": "dist/index.js",
+  "license": "MIT",
+  "keywords": [
+    "contabo",
+    "api",
+    "simulator",
+    "docker",
+    "ssh",
+    "vps",
+    "cloud",
+    "testing",
+    "mock",
+    "development"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "build:docker": "docker build -t contabo-sim-ubuntu:22.04 docker/ubuntu-ssh/ && docker build -t contabo-sim-debian:12 docker/debian-ssh/"
+  },
+  "dependencies": {
+    "dockerode": "^4.0.4",
+    "express": "^4.21.2",
+    "uuid": "^11.1.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/dockerode": "^3.3.34",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.0",
+    "@types/uuid": "^10.0.0",
+    "@types/cors": "^2.8.17",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}
